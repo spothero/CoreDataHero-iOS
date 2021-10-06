@@ -1,8 +1,8 @@
 // Copyright © 2021 SpotHero, Inc. All rights reserved.
 
 import CoreData
-import Foundation
 @testable import CoreDataHero
+import Foundation
 import XCTest
 
 protocol CoreDataOperatorTesting: XCTestCase {
