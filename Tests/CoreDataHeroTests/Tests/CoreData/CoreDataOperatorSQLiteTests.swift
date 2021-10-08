@@ -7,7 +7,36 @@ import XCTest
 final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
     // MARK: Properties
     
-    var coreDataOperator: CoreDataOperator = .mocked(name: "CoreDataHero", storeType: .sqlite, managedObjectModel: .mocked)
+    fileprivate static let modelName = "CoreDataHero"
+    
+    var coreDataOperator: CoreDataOperator = .mocked(
+        name: CoreDataOperatorSQLiteTests.modelName,
+        storeType: .sqlite,
+        managedObjectModel: .mocked,
+        databaseURL: SQLiteFileType.databaseFile.url
+    )
+    
+    // MARK: Reset Core Data Tests
+    
+    func testResetCoreDataClearsAllDatabaseFiles() {
+        // After initializing the Core Data stack, very 3 files exist (.sqlite, .sqlite-shm, .sqlite-wal).
+        let fileTypes = SQLiteFileType.allCases
+        XCTAssertEqual(fileTypes.count, 3)
+        
+        for fileType in fileTypes {
+            XCTAssertTrue(FileManager.default.fileExists(atPath: fileType.url.path),
+                          "Missing file: \(fileType.url.path)")
+        }
+        
+        // Reset Core Data.
+        self.coreDataOperator.resetCoreData()
+        
+        // Verify all 3 files were deleted.
+        for fileType in fileTypes {
+            XCTAssertFalse(FileManager.default.fileExists(atPath: fileType.url.path),
+                          "File was not deleted: \(fileType.url.path)")
+        }
+    }
     
     // MARK: Create Tests
     
