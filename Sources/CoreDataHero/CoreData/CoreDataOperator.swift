@@ -124,14 +124,16 @@ public class CoreDataOperator {
         }
         
         for store in container.persistentStoreCoordinator.persistentStores {
-            // Remove the store from the persistent store coordiator.
-            try? container.persistentStoreCoordinator.remove(store)
-            
-            // Try to find the path to the store and remove it from the file system.
-            if
-                let path = store.url?.path,
-                FileManager.default.fileExists(atPath: path) {
-                try? FileManager.default.removeItem(atPath: path)
+            if let storeURL = store.url {
+                // Destroy the persistent store, then clean up all the generated SQLite files.
+                // (i.e. the .sqlite, .sqlite-shm, and .sqlite-wal files)
+                try? container.persistentStoreCoordinator.destroyPersistentStore(at: storeURL,
+                                                                                 ofType: store.type,
+                                                                                 options: nil)
+                try? store.deleteStoreFiles()
+            } else {
+                // If there's no URL for the store, just remove it from the coordinator.
+                try? container.persistentStoreCoordinator.remove(store)
             }
         }
         
