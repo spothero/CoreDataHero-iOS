@@ -117,7 +117,7 @@ public class CoreDataOperator {
     /// you may want to remove all data from your persistent store, but should not remove the persistent store from the file system.
     ///
     /// After calling this method, `initializeSharedContext` must be called again prior to performing any other operations.
-    public func resetCoreData() {
+    public func clearCoreData() {
         guard let container = self.persistentContainer else {
             // Nothing to tear down, there is no persistent container.
             return

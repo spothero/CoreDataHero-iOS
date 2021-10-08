@@ -17,8 +17,10 @@ final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
     
     // MARK: Reset Core Data Tests
     
-    func testResetCoreDataClearsAllDatabaseFiles() {
-        let operatorToReset: CoreDataOperator = .mocked(
+    func testClearCoreDataClearsAllDatabaseFiles() {
+        // Create a local operator so we don't have to worry about re-initializing
+        // the shared coreDataOperator property.
+        let operatorToClear: CoreDataOperator = .mocked(
             name: CoreDataOperatorSQLiteTests.modelName,
             storeType: .sqlite,
             managedObjectModel: .mocked,
@@ -34,8 +36,8 @@ final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
                           "Missing file: \(fileType.url.path)")
         }
         
-        // Reset Core Data.
-        operatorToReset.resetCoreData()
+        // Clear Core Data.
+        operatorToClear.clearCoreData()
         
         // Verify all 3 files were deleted.
         for fileType in fileTypes {
