@@ -12,10 +12,15 @@
         /// - Parameter managedObjectModel: By default, the provided name value of the container is used as the name of
         ///                                 the persisent store associated with the container. Passing in the `NSManagedObjectModel`
         ///                                 object overrides the lookup of the model by the provided name value.
+        /// - Parameter databaseURL: The URL for the database. Defaults to `nil`.
         static func mocked(name: String,
                            storeType: NSPersistentContainer.StoreType = .memory,
-                           managedObjectModel: NSManagedObjectModel? = nil) -> CoreDataOperator {
-            return CoreDataOperator(persistentContainer: .mocked(name: name, storeType: storeType, managedObjectModel: managedObjectModel))
+                           managedObjectModel: NSManagedObjectModel? = nil,
+                           databaseURL: URL? = nil) -> CoreDataOperator {
+            return CoreDataOperator(persistentContainer: .mocked(name: name,
+                                                                 storeType: storeType,
+                                                                 managedObjectModel: managedObjectModel,
+                                                                 databaseURL: databaseURL))
         }
     }
     
