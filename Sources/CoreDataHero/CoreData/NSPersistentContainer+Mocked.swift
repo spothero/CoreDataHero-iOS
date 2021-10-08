@@ -26,7 +26,11 @@
             }()
             
             let description = NSPersistentStoreDescription()
-            description.url = databaseURL
+            if let databaseURL = databaseURL {
+                // Only set the URL if one was provided, otherwise an error will occur when set to nil.
+                // When a url is not explicitly set, "/dev/null" will be used as the default url.
+                description.url = databaseURL
+            }
             
             // Storing in memory will prevent saving of data between runs
             description.type = storeType.rawValue
