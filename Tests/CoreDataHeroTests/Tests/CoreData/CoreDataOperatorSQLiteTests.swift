@@ -42,7 +42,7 @@ final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
         // Verify all 3 files were deleted.
         for fileType in fileTypes {
             XCTAssertFalse(FileManager.default.fileExists(atPath: fileType.url.path),
-                          "File was not deleted: \(fileType.url.path)")
+                           "File was not deleted: \(fileType.url.path)")
         }
     }
     
