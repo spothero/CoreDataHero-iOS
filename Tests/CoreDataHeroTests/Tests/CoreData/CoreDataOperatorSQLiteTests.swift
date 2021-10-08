@@ -12,13 +12,19 @@ final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
     var coreDataOperator: CoreDataOperator = .mocked(
         name: CoreDataOperatorSQLiteTests.modelName,
         storeType: .sqlite,
-        managedObjectModel: .mocked,
-        databaseURL: SQLiteFileType.databaseFile.url
+        managedObjectModel: .mocked
     )
     
     // MARK: Reset Core Data Tests
     
     func testResetCoreDataClearsAllDatabaseFiles() {
+        let operatorToReset: CoreDataOperator = .mocked(
+            name: CoreDataOperatorSQLiteTests.modelName,
+            storeType: .sqlite,
+            managedObjectModel: .mocked,
+            databaseURL: SQLiteFileType.databaseFile.url
+        )
+        
         // After initializing the Core Data stack, very 3 files exist (.sqlite, .sqlite-shm, .sqlite-wal).
         let fileTypes = SQLiteFileType.allCases
         XCTAssertEqual(fileTypes.count, 3)
@@ -29,7 +35,7 @@ final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
         }
         
         // Reset Core Data.
-        self.coreDataOperator.resetCoreData()
+        operatorToReset.resetCoreData()
         
         // Verify all 3 files were deleted.
         for fileType in fileTypes {
