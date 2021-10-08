@@ -79,3 +79,33 @@ final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
         self.verifyDeleteAllObjectsUsingBatchDeleteSucceeds()
     }
 }
+
+// MARK: - Utilities
+
+private extension CoreDataOperatorSQLiteTests {
+    enum SQLiteFileType: CaseIterable {
+        /// Refers to the .sqlite file.
+        case databaseFile
+        /// Refers to the .sqlite-shm file.
+        case sharedMemoryFile
+        /// Refers to the .sqlite-wal file.
+        case writeAheadLogFile
+        
+        var `extension`: String {
+            switch self {
+            case .databaseFile:
+                return ".sqlite"
+            case .sharedMemoryFile:
+                return ".sqlite-shm"
+            case .writeAheadLogFile:
+                return ".sqlite-wal"
+            }
+        }
+        
+        /// The URL for the current file type.
+        var url: URL {
+            let modelName = CoreDataOperatorSQLiteTests.modelName
+            return .temporary.appendingPathComponent("\(modelName)\(self.extension)")
+        }
+    }
+}
