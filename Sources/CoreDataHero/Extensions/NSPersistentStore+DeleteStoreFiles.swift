@@ -1,14 +1,8 @@
-//
-//  File.swift
-//  
-//
-//  Created by Kyle Haptonstall on 10/8/21.
-//
+// Copyright © 2021 SpotHero, Inc. All rights reserved.
 
 import CoreData
 
 extension NSPersistentStore {
-    
     /// Deletes the store's .sqlite, .sqlite-shm, and .sqlite.wal files.
     func deleteStoreFiles() throws {
         guard let storeURLPath = self.url?.path else {
@@ -22,5 +16,4 @@ extension NSPersistentStore {
         // Remove the write ahead logging (.sqlite-wal) file.
         try FileManager.default.removeItem(atPath: storeURLPath.appending("-wal"))
     }
-    
 }
