@@ -3,7 +3,7 @@
 import CoreData
 
 extension NSPersistentStore {
-    /// Deletes the store's .sqlite, .sqlite-shm, and .sqlite.wal files.
+    /// Deletes the store's .sqlite, .sqlite-shm, and .sqlite-wal files.
     func deleteStoreFiles() throws {
         guard let storeURLPath = self.url?.path else {
             return
