@@ -62,7 +62,8 @@ public class CoreDataOperator {
         self.initializeCoreDataStack(modelURL: modelURL, databaseURL: databaseURL)
     }
     
-    /// Initializes a new Core Data stack using the passed in arguments to create a `NSPersistentContainer`.
+    /// Initializes a new Core Data stack using the passed in arguments to create a `NSPersistentContainer`. The container
+    /// is setup so that migrations are automatic and use inferred mapping models.
     ///
     /// Ensure `clearCoreData` is called before subsequent calls to this method.
     /// - Parameters:
@@ -79,11 +80,6 @@ public class CoreDataOperator {
         
         let storeType: NSPersistentContainer.StoreType = databaseURL != nil ? .sqlite : .memory
         description.type = storeType.rawValue
-        
-        // Set the following options to enable Automatic Lightweight Migration.
-        // https://developer.apple.com/documentation/coredata/using_lightweight_migration
-        description.setOption(NSNumber(true), forKey: NSMigratePersistentStoresAutomaticallyOption)
-        description.setOption(NSNumber(true), forKey: NSInferMappingModelAutomaticallyOption)
         
         container.persistentStoreDescriptions = [description]
         
