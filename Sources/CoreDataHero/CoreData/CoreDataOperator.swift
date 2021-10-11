@@ -62,7 +62,8 @@ public class CoreDataOperator {
         self.initializeCoreDataStack(modelURL: modelURL, databaseURL: databaseURL)
     }
     
-    /// Initializes a new Core Data stack using the passed in arguments to create a `NSPersistentContainer`.
+    /// Initializes a new Core Data stack using the passed in arguments to create a `NSPersistentContainer`. The container
+    /// is setup so that migrations are automatic and use inferred mapping models.
     ///
     /// Ensure `clearCoreData` is called before subsequent calls to this method.
     /// - Parameters:
