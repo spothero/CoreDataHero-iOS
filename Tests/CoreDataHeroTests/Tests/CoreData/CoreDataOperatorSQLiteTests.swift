@@ -7,7 +7,52 @@ import XCTest
 final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
     // MARK: Properties
     
-    var coreDataOperator: CoreDataOperator = .mocked(name: "CoreDataHero", storeType: .sqlite, managedObjectModel: .mocked)
+    fileprivate static let modelName = "CoreDataHero"
+    
+    var coreDataOperator: CoreDataOperator = .mocked(
+        name: CoreDataOperatorSQLiteTests.modelName,
+        storeType: .sqlite,
+        managedObjectModel: .mocked
+    )
+    
+    // MARK: Clear Core Data Tests
+    
+    func testClearCoreDataClearsAllDatabaseFiles() {
+        let modelName = CoreDataOperatorSQLiteTests.modelName
+        
+        // Define the paths where the database and related files will live.
+        let databaseFileURL = URL.temporary.appendingPathComponent("\(modelName).sqlite")
+        
+        let filePaths = [
+            databaseFileURL.path,
+            databaseFileURL.path.appending("-shm"), // Shared memory file
+            databaseFileURL.path.appending("-wal"), // Write ahead logging file
+        ]
+        
+        // Create a local operator so we don't have to worry about re-initializing
+        // the shared coreDataOperator property.
+        let operatorToClear: CoreDataOperator = .mocked(
+            name: modelName,
+            storeType: .sqlite,
+            managedObjectModel: .mocked,
+            databaseURL: databaseFileURL
+        )
+        
+        // After initializing the Core Data stack, verify 3 files exist (.sqlite, .sqlite-shm, .sqlite-wal).
+        for path in filePaths {
+            XCTAssertTrue(FileManager.default.fileExists(atPath: path),
+                          "Missing file: \(path)")
+        }
+        
+        // Clear Core Data.
+        operatorToClear.clearCoreData()
+        
+        // Verify all 3 files were deleted.
+        for path in filePaths {
+            XCTAssertFalse(FileManager.default.fileExists(atPath: path),
+                           "File was not deleted: \(path)")
+        }
+    }
     
     // MARK: Create Tests
     
