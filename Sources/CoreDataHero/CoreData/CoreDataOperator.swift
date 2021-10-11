@@ -81,11 +81,6 @@ public class CoreDataOperator {
         let storeType: NSPersistentContainer.StoreType = databaseURL != nil ? .sqlite : .memory
         description.type = storeType.rawValue
         
-        // Set the following options to enable Automatic Lightweight Migration.
-        // https://developer.apple.com/documentation/coredata/using_lightweight_migration
-        description.setOption(NSNumber(true), forKey: NSMigratePersistentStoresAutomaticallyOption)
-        description.setOption(NSNumber(true), forKey: NSInferMappingModelAutomaticallyOption)
-        
         container.persistentStoreDescriptions = [description]
         
         container.loadPersistentStores { description, error in
