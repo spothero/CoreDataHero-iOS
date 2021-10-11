@@ -38,7 +38,7 @@ final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
             databaseURL: databaseFileURL
         )
         
-        // After initializing the Core Data stack, very 3 files exist (.sqlite, .sqlite-shm, .sqlite-wal).
+        // After initializing the Core Data stack, verify 3 files exist (.sqlite, .sqlite-shm, .sqlite-wal).
         for path in filePaths {
             XCTAssertTrue(FileManager.default.fileExists(atPath: path),
                           "Missing file: \(path)")
