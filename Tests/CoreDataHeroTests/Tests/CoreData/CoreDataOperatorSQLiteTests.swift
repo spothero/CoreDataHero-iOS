@@ -15,34 +15,42 @@ final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
         managedObjectModel: .mocked
     )
     
-    // MARK: Reset Core Data Tests
+    // MARK: Clear Core Data Tests
     
     func testClearCoreDataClearsAllDatabaseFiles() {
+        let modelName = CoreDataOperatorSQLiteTests.modelName
+        
+        // Define the paths where the database and related files will live.
+        let databaseFileURL = URL.temporary.appendingPathComponent("\(modelName).sqlite")
+        
+        let filePaths = [
+            databaseFileURL.path,
+            databaseFileURL.path.appending("-shm"), // Shared memory file
+            databaseFileURL.path.appending("-wal"), // Write ahead logging file
+        ]
+        
         // Create a local operator so we don't have to worry about re-initializing
         // the shared coreDataOperator property.
         let operatorToClear: CoreDataOperator = .mocked(
-            name: CoreDataOperatorSQLiteTests.modelName,
+            name: modelName,
             storeType: .sqlite,
             managedObjectModel: .mocked,
-            databaseURL: SQLiteFileType.databaseFile.url
+            databaseURL: databaseFileURL
         )
         
         // After initializing the Core Data stack, very 3 files exist (.sqlite, .sqlite-shm, .sqlite-wal).
-        let fileTypes = SQLiteFileType.allCases
-        XCTAssertEqual(fileTypes.count, 3)
-        
-        for fileType in fileTypes {
-            XCTAssertTrue(FileManager.default.fileExists(atPath: fileType.url.path),
-                          "Missing file: \(fileType.url.path)")
+        for path in filePaths {
+            XCTAssertTrue(FileManager.default.fileExists(atPath: path),
+                          "Missing file: \(path)")
         }
         
         // Clear Core Data.
         operatorToClear.clearCoreData()
         
         // Verify all 3 files were deleted.
-        for fileType in fileTypes {
-            XCTAssertFalse(FileManager.default.fileExists(atPath: fileType.url.path),
-                           "File was not deleted: \(fileType.url.path)")
+        for path in filePaths {
+            XCTAssertFalse(FileManager.default.fileExists(atPath: path),
+                           "File was not deleted: \(path)")
         }
     }
     
@@ -114,35 +122,5 @@ final class CoreDataOperatorSQLiteTests: XCTestCase, CoreDataOperatorTesting {
     
     func testDeleteAllObjectsUsingBatchDelete() throws {
         self.verifyDeleteAllObjectsUsingBatchDeleteSucceeds()
-    }
-}
-
-// MARK: - Utilities
-
-private extension CoreDataOperatorSQLiteTests {
-    enum SQLiteFileType: CaseIterable {
-        /// Refers to the .sqlite file.
-        case databaseFile
-        /// Refers to the .sqlite-shm file.
-        case sharedMemoryFile
-        /// Refers to the .sqlite-wal file.
-        case writeAheadLogFile
-        
-        var `extension`: String {
-            switch self {
-            case .databaseFile:
-                return ".sqlite"
-            case .sharedMemoryFile:
-                return ".sqlite-shm"
-            case .writeAheadLogFile:
-                return ".sqlite-wal"
-            }
-        }
-        
-        /// The URL for the current file type.
-        var url: URL {
-            let modelName = CoreDataOperatorSQLiteTests.modelName
-            return .temporary.appendingPathComponent("\(modelName)\(self.extension)")
-        }
     }
 }
