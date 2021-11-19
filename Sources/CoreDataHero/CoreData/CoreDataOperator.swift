@@ -150,7 +150,7 @@ public class CoreDataOperator {
         }
         
         // Instead of using T.fetchRequest(), we build the FetchRequest so we don't need to cast the result
-        let fetchRequest = NSFetchRequest<T>(entityName: String(describing: T.self))
+        let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
         fetchRequest.includesPropertyValues = false
         fetchRequest.includesSubentities = false
         fetchRequest.predicate = predicate
@@ -171,7 +171,7 @@ public class CoreDataOperator {
             throw UBCoreDataError.managedObjectContextNotFound
         }
         
-        return NSEntityDescription.insertNewObject(forEntityName: String(describing: T.self), into: context) as? T
+        return NSEntityDescription.insertNewObject(forEntityName: String(describing: type.self), into: context) as? T
     }
     
     // MARK: Delete
@@ -210,14 +210,14 @@ public class CoreDataOperator {
         let useBatchRequest = canBatchDelete && batchDelete
         
         if useBatchRequest {
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: T.self))
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: type.self))
             fetchRequest.includesPropertyValues = false
             fetchRequest.predicate = predicate
             let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
             
             try context.executeAndMergeChanges(using: deleteRequest)
         } else {
-            let fetchRequest = NSFetchRequest<T>(entityName: String(describing: T.self))
+            let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
             fetchRequest.includesPropertyValues = false
             fetchRequest.predicate = predicate
             
@@ -263,7 +263,7 @@ public class CoreDataOperator {
         }
         
         // Instead of using T.fetchRequest(), we build the FetchRequest so we don't need to cast the result
-        let fetchRequest = NSFetchRequest<T>(entityName: String(describing: T.self))
+        let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
         fetchRequest.predicate = predicate
         fetchRequest.fetchLimit = 1
         
@@ -290,7 +290,7 @@ public class CoreDataOperator {
         }
         
         // Instead of using T.fetchRequest(), we build the FetchRequest so we don't need to cast the result
-        let fetchRequest = NSFetchRequest<T>(entityName: String(describing: T.self))
+        let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
         fetchRequest.predicate = predicate
         fetchRequest.sortDescriptors = sortDescriptors
         
