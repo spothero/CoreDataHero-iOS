@@ -1,4 +1,4 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.5
 
 // Copyright © 2021 SpotHero, Inc. All rights reserved.
 
@@ -7,7 +7,7 @@ import PackageDescription
 let package = Package(
     name: "CoreDataHero",
     platforms: [
-        .iOS(.v10),         // supports NSPersistentContainer
+        .iOS(.v15),         // supports NSPersistentContainer
         .macOS(.v10_12),    // supports NSPersistentContainer
         .tvOS(.v10),        // supports NSPersistentContainer
         .watchOS(.v3),      // supports NSPersistentContainer
