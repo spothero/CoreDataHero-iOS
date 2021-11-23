@@ -138,7 +138,7 @@ public class CoreDataOperator {
     
     // MARK: Count
     
-    /// Returns the count of a given managed object.
+    /// Returns the count of a given managed object. Ensures thread safety and performs work synchronously on the manged object context.
     /// - Parameter type: The type of managed object to count.
     /// - Parameter predicate: The predicate to filter the request by.
     /// - Parameter context: The managed object context to perform the count operation in. If nil, uses the current default context.
@@ -149,21 +149,35 @@ public class CoreDataOperator {
             throw UBCoreDataError.managedObjectContextNotFound
         }
         
-        // Instead of using T.fetchRequest(), we build the FetchRequest so we don't need to cast the result
-        let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
-        fetchRequest.includesPropertyValues = false
-        fetchRequest.includesSubentities = false
-        fetchRequest.predicate = predicate
+        var count: Int?
+        var performError: Error?
+        context.performAndWait {
+            // Instead of using T.fetchRequest(), we build the FetchRequest so we don't need to cast the result
+            let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
+            fetchRequest.includesPropertyValues = false
+            fetchRequest.includesSubentities = false
+            fetchRequest.predicate = predicate
+            
+            do {
+                count = try context.count(for: fetchRequest)
+            } catch {
+                performError = error
+            }
+        }
         
-        let count = try context.count(for: fetchRequest)
-        
-        // If the fetched objects were not found, ensure that we return 0
-        return (count != NSNotFound) ? count : 0
+        if let performError = performError {
+            throw performError
+        } else if let count = count {
+            // If the fetched objects were not found, ensure that we return 0
+            return (count != NSNotFound) ? count : 0
+        } else {
+            return 0
+        }
     }
     
     // MARK: Create
     
-    /// Creates a new instance of a managed object subclass.
+    /// Creates a new instance of a managed object subclass. Ensures thread safety and performs work synchronously on the manged object context.
     /// - Parameter type: The managed object subclass type to create.
     /// - Parameter context: The managed object context to create the object in. If nil, uses the current default context.
     public func newInstance<T: NSManagedObject>(of type: T.Type, in context: NSManagedObjectContext? = nil) throws -> T? {
@@ -171,23 +185,39 @@ public class CoreDataOperator {
             throw UBCoreDataError.managedObjectContextNotFound
         }
         
-        return NSEntityDescription.insertNewObject(forEntityName: String(describing: type.self), into: context) as? T
+        var newInstance: T?
+        context.performAndWait {
+            newInstance = NSEntityDescription.insertNewObject(forEntityName: String(describing: type.self), into: context) as? T
+        }
+        
+        return newInstance
     }
     
     // MARK: Delete
     
-    /// Deletes a single managed object.
+    /// Deletes a single managed object. Ensures thread safety and performs work synchronously on the manged object context.
     /// - Parameter object: The object to delete.
     public func delete<T: NSManagedObject>(_ object: T) throws {
         guard let context = object.managedObjectContext else {
             throw UBCoreDataError.objectHasNoManagedObjectContext(object)
         }
         
-        context.delete(object)
-        try context.save()
+        var performError: Error?
+        context.performAndWait {
+            context.delete(object)
+            do {
+                try context.save()
+            } catch {
+                performError = error
+            }
+        }
+        
+        if let performError = performError {
+            throw performError
+        }
     }
     
-    /// Deletes all objects of a given entity type.
+    /// Deletes all objects of a given entity type. Ensures thread safety and performs work synchronously on the manged object context.
     /// - Parameter type: The entity type to batch delete.
     /// - Parameter predicate: The predicate to filter the request by.
     /// - Parameter context: The managed object context to perform the delete operation in. If nil, uses the current default context.
@@ -205,34 +235,45 @@ public class CoreDataOperator {
             throw UBCoreDataError.managedObjectContextNotFound
         }
         
-        // Batch requests are only compatible on SQLite stores.
-        let canBatchDelete = context.persistentStoreCoordinator?.persistentStores.first?.type == NSSQLiteStoreType
-        let useBatchRequest = canBatchDelete && batchDelete
-        
-        if useBatchRequest {
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: type.self))
-            fetchRequest.includesPropertyValues = false
-            fetchRequest.predicate = predicate
-            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+        var performError: Error?
+        context.performAndWait {
+            // Batch requests are only compatible on SQLite stores.
+            let canBatchDelete = context.persistentStoreCoordinator?.persistentStores.first?.type == NSSQLiteStoreType
+            let useBatchRequest = canBatchDelete && batchDelete
             
-            try context.executeAndMergeChanges(using: deleteRequest)
-        } else {
-            let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
-            fetchRequest.includesPropertyValues = false
-            fetchRequest.predicate = predicate
-            
-            let results = try context.fetch(fetchRequest)
-            for object in results {
-                context.delete(object)
+            do {
+                if useBatchRequest {
+                    let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: type.self))
+                    fetchRequest.includesPropertyValues = false
+                    fetchRequest.predicate = predicate
+                    let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+                    
+                    try context.executeAndMergeChanges(using: deleteRequest)
+                } else {
+                    let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
+                    fetchRequest.includesPropertyValues = false
+                    fetchRequest.predicate = predicate
+                    
+                    let results = try context.fetch(fetchRequest)
+                    for object in results {
+                        context.delete(object)
+                    }
+                }
+                
+                try context.save()
+            } catch {
+                performError = error
             }
         }
         
-        try context.save()
+        if let performError = performError {
+            throw performError
+        }
     }
     
     // MARK: Exists
     
-    /// Checks whether a given type of entity exists.
+    /// Checks whether a given type of entity exists. Ensures thread safety and performs work synchronously on the manged object context.
     /// - Parameter type: The type of entity to check existence for.
     /// - Parameter predicate: The predicate to filter the request by.
     /// - Parameter context: The managed object context to use when checking for existence of a given object type.
@@ -245,7 +286,7 @@ public class CoreDataOperator {
     
     // MARK: Fetch
     
-    /// Fetches a single managed object of a given type.
+    /// Fetches a single managed object of a given type. Ensures thread safety and performs work synchronously on the manged object context.
     /// - Parameters:
     ///   - type: The type of entity to fetch.
     ///   - predicate: The predicate to filter the request by.
@@ -262,16 +303,30 @@ public class CoreDataOperator {
             return nil
         }
         
-        // Instead of using T.fetchRequest(), we build the FetchRequest so we don't need to cast the result
-        let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
-        fetchRequest.predicate = predicate
-        fetchRequest.fetchLimit = 1
+        var result: T?
+        var performError: Error?
+        context.performAndWait {
+            // Instead of using T.fetchRequest(), we build the FetchRequest so we don't need to cast the result
+            let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
+            fetchRequest.predicate = predicate
+            fetchRequest.fetchLimit = 1
+            
+            do {
+                let results = try context.fetch(fetchRequest)
+                result = results.first
+            } catch {
+                performError = error
+            }
+        }
         
-        let results = try context.fetch(fetchRequest)
-        return results.first
+        if let performError = performError {
+            throw performError
+        } else {
+            return result
+        }
     }
     
-    /// Allows fetching multiple managed objects of a given type.
+    /// Allows fetching multiple managed objects of a given type. Ensures thread safety and performs work synchronously on the manged object context.
     /// - Parameters:
     ///   - type: The type of entity to fetch all results for.
     ///   - predicate: The predicate to filter the request by.
@@ -289,34 +344,61 @@ public class CoreDataOperator {
             throw UBCoreDataError.managedObjectContextNotFound
         }
         
-        // Instead of using T.fetchRequest(), we build the FetchRequest so we don't need to cast the result
-        let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
-        fetchRequest.predicate = predicate
-        fetchRequest.sortDescriptors = sortDescriptors
-        
-        if let fetchLimit = fetchLimit {
-            fetchRequest.fetchLimit = fetchLimit
+        var results: [T]?
+        var performError: Error?
+        context.performAndWait {
+            // Instead of using T.fetchRequest(), we build the FetchRequest so we don't need to cast the result
+            let fetchRequest = NSFetchRequest<T>(entityName: String(describing: type.self))
+            fetchRequest.predicate = predicate
+            fetchRequest.sortDescriptors = sortDescriptors
+            
+            if let fetchLimit = fetchLimit {
+                fetchRequest.fetchLimit = fetchLimit
+            }
+            
+            if let fetchBatchSize = fetchBatchSize {
+                fetchRequest.fetchBatchSize = fetchBatchSize
+            }
+            
+            do {
+                results = try context.fetch(fetchRequest)
+            } catch {
+                performError = error
+            }
         }
         
-        if let fetchBatchSize = fetchBatchSize {
-            fetchRequest.fetchBatchSize = fetchBatchSize
+        if let performError = performError {
+            throw performError
+        } else {
+            return results ?? []
         }
-        
-        return try context.fetch(fetchRequest)
     }
     
     // MARK: Save
     
-    /// Saves the default managed object context.
+    /// Saves the default managed object context. Ensures thread safety and performs work synchronously on the manged object context.
     public func saveDefaultContext() throws {
         guard let context = self.defaultContext, context.hasChanges else {
             return
         }
-        try context.save()
+        
+        var performError: Error?
+        context.performAndWait {
+            do {
+                try context.save()
+            } catch {
+                performError = error
+            }
+        }
+        
+        if let performError = performError {
+            throw performError
+        }
     }
     
     /// Saves the passed in context if there are changes and merges the changes with the `defaultContext`.
     /// If the passed in context is not a child of the `defaultContext`, this method does nothing.
+    /// Ensures thread safety and performs work synchronously on the manged object contexts.
     /// - Parameters:
     ///   - context: The context to save.
     public func saveAndMerge(context: NSManagedObjectContext) {
@@ -340,11 +422,11 @@ public class CoreDataOperator {
             return
         }
         
-        context.perform {
+        context.performAndWait {
             // Save the child context. This will push changes up to the parent.
             try? context.save()
             
-            mainContext.perform {
+            mainContext.performAndWait {
                 // Save the parent context. This will push changes to the persistent store.
                 try? mainContext.save()
             }
