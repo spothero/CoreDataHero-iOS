@@ -2,7 +2,6 @@
 
 import CoreData
 
-@available(iOS 10.0, watchOS 3.0, *)
 public extension NSPersistentContainer {
     /// The persistent container store type.
     ///

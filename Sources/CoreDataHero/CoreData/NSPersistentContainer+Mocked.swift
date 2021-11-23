@@ -4,7 +4,6 @@
     
     import CoreData
     
-    @available(iOS 10.0, watchOS 3.0, *)
     public extension NSPersistentContainer {
         /// Creates a mocked `NSPersistentContainer` for use with testing.
         /// - Parameter name: The name of the Data Model to persist.

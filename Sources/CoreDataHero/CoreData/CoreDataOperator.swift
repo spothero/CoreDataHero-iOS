@@ -4,7 +4,6 @@ import CoreData
 import Foundation
 
 /// A helper class to assist with all CoreData operations.
-@available(iOS 10.0, watchOS 3.0, *)
 public class CoreDataOperator {
     // MARK: - Shared Instance
     
