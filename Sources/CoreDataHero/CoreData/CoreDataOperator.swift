@@ -138,7 +138,7 @@ public class CoreDataOperator {
     
     // MARK: Count
     
-    /// Returns the count of a given managed object. Ensures thread safety and performs work synchronously on the manged object context.
+    /// Returns the count of a given managed object. Ensures thread safety and performs work synchronously on the managed object context.
     /// - Parameter type: The type of managed object to count.
     /// - Parameter predicate: The predicate to filter the request by.
     /// - Parameter context: The managed object context to perform the count operation in. If nil, uses the current default context.
@@ -177,7 +177,7 @@ public class CoreDataOperator {
     
     // MARK: Create
     
-    /// Creates a new instance of a managed object subclass. Ensures thread safety and performs work synchronously on the manged object context.
+    /// Creates a new instance of a managed object subclass. Ensures thread safety and performs work synchronously on the managed object context.
     /// - Parameter type: The managed object subclass type to create.
     /// - Parameter context: The managed object context to create the object in. If nil, uses the current default context.
     public func newInstance<T: NSManagedObject>(of type: T.Type, in context: NSManagedObjectContext? = nil) throws -> T? {
@@ -195,7 +195,7 @@ public class CoreDataOperator {
     
     // MARK: Delete
     
-    /// Deletes a single managed object. Ensures thread safety and performs work synchronously on the manged object context.
+    /// Deletes a single managed object. Ensures thread safety and performs work synchronously on the managed object context.
     /// - Parameter object: The object to delete.
     public func delete<T: NSManagedObject>(_ object: T) throws {
         guard let context = object.managedObjectContext else {
@@ -217,7 +217,7 @@ public class CoreDataOperator {
         }
     }
     
-    /// Deletes all objects of a given entity type. Ensures thread safety and performs work synchronously on the manged object context.
+    /// Deletes all objects of a given entity type. Ensures thread safety and performs work synchronously on the managed object context.
     /// - Parameter type: The entity type to batch delete.
     /// - Parameter predicate: The predicate to filter the request by.
     /// - Parameter context: The managed object context to perform the delete operation in. If nil, uses the current default context.
@@ -273,7 +273,7 @@ public class CoreDataOperator {
     
     // MARK: Exists
     
-    /// Checks whether a given type of entity exists. Ensures thread safety and performs work synchronously on the manged object context.
+    /// Checks whether a given type of entity exists. Ensures thread safety and performs work synchronously on the managed object context.
     /// - Parameter type: The type of entity to check existence for.
     /// - Parameter predicate: The predicate to filter the request by.
     /// - Parameter context: The managed object context to use when checking for existence of a given object type.
@@ -286,7 +286,7 @@ public class CoreDataOperator {
     
     // MARK: Fetch
     
-    /// Fetches a single managed object of a given type. Ensures thread safety and performs work synchronously on the manged object context.
+    /// Fetches a single managed object of a given type. Ensures thread safety and performs work synchronously on the managed object context.
     /// - Parameters:
     ///   - type: The type of entity to fetch.
     ///   - predicate: The predicate to filter the request by.
@@ -326,7 +326,7 @@ public class CoreDataOperator {
         }
     }
     
-    /// Allows fetching multiple managed objects of a given type. Ensures thread safety and performs work synchronously on the manged object context.
+    /// Allows fetching multiple managed objects of a given type. Ensures thread safety and performs work synchronously on the managed object context.
     /// - Parameters:
     ///   - type: The type of entity to fetch all results for.
     ///   - predicate: The predicate to filter the request by.
@@ -376,7 +376,7 @@ public class CoreDataOperator {
     
     // MARK: Save
     
-    /// Saves the default managed object context. Ensures thread safety and performs work synchronously on the manged object context.
+    /// Saves the default managed object context. Ensures thread safety and performs work synchronously on the managed object context.
     public func saveDefaultContext() throws {
         guard let context = self.defaultContext, context.hasChanges else {
             return
@@ -398,7 +398,7 @@ public class CoreDataOperator {
     
     /// Saves the passed in context if there are changes and merges the changes with the `defaultContext`.
     /// If the passed in context is not a child of the `defaultContext`, this method does nothing.
-    /// Ensures thread safety and performs work synchronously on the manged object contexts.
+    /// Ensures thread safety and performs work synchronously on the managed object contexts.
     /// - Parameters:
     ///   - context: The context to save.
     public func saveAndMerge(context: NSManagedObjectContext) {
