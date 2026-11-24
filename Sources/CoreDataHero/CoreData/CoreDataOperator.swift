@@ -54,12 +54,14 @@ public class CoreDataOperator {
     ///   - modelName: The name of the model (.momd) file to use.
     ///   - databaseURL: The URL where the database should be persisted. If no URL is given, all data will be stored in memory.
     ///   - bundle: The bundle used to lookup the Core Data model file. Defaults to `.main`.
-    public func initializeCoreDataStack(modelName: String, databaseURL: URL?, bundle: Bundle = .main) {
+    /// - Throws: The error returned by `loadPersistentStores` if the persistent store fails to load
+    ///           (e.g. the existing store can't be migrated to the current model). See `initializeCoreDataStack(modelURL:databaseURL:)`.
+    public func initializeCoreDataStack(modelName: String, databaseURL: URL?, bundle: Bundle = .main) throws {
         guard let modelURL = bundle.url(forResource: modelName, withExtension: "momd") else {
             fatalError("Failed to find \(modelName).momd in bundle \(bundle).")
         }
         
-        self.initializeCoreDataStack(modelURL: modelURL, databaseURL: databaseURL)
+        try initializeCoreDataStack(modelURL: modelURL, databaseURL: databaseURL)
     }
     
     /// Initializes a new Core Data stack using the passed in arguments to create a `NSPersistentContainer`. The container
@@ -69,7 +71,11 @@ public class CoreDataOperator {
     /// - Parameters:
     ///   - modelURL: The URL path to the model (.momd) file to use.
     ///   - databaseURL: The URL where the database should be persisted. If no URL is given, all data will be stored in memory.
-    public func initializeCoreDataStack(modelURL: URL, databaseURL: URL?) {
+    /// - Throws: The error returned by `loadPersistentStores` if the persistent store fails to load
+    ///           (e.g. the existing store can't be migrated to the current model, or the file is corrupt).
+    ///           When this happens, the stack is left uninitialized. To recover, callers can call
+    ///           `CoreDataOperator.destroyPersistentStore(at:)` and then call this method again.
+    public func initializeCoreDataStack(modelURL: URL, databaseURL: URL?) throws {
         guard let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL) else {
             fatalError("Failed to initialize managed object model with contents of url: \(modelURL)")
         }
@@ -80,19 +86,39 @@ public class CoreDataOperator {
         
         let storeType: NSPersistentContainer.StoreType = databaseURL != nil ? .sqlite : .memory
         description.type = storeType.rawValue
-        
+        description.shouldAddStoreAsynchronously = false
+
         container.persistentStoreDescriptions = [description]
         
+        var loadError: Error?
         container.loadPersistentStores { description, error in
             // Check if the data store matches
             precondition(description.type == storeType.rawValue)
             
-            // Check if creating container wrong
-            if let error = error {
-                fatalError("Failed to create persistent container. \(error.localizedDescription)")
-            }
+            loadError = error
         }
+        
+        if let loadError = loadError {
+            throw loadError
+        }
+        
         self.persistentContainer = container
+    }
+    
+    // MARK: Destroying Persistent Stores
+    
+    /// Destroys the SQLite persistent store at the given URL and deletes its files from the file system
+    /// (i.e. the .sqlite, .sqlite-shm, and .sqlite-wal files).
+    ///
+    /// Use this to recover when `initializeCoreDataStack` throws because the existing store can't be loaded.
+    /// Unlike `clearCoreData`, this does not require the stack to have been initialized.
+    /// - Parameter databaseURL: The URL of the persistent store to destroy.
+    public static func destroyPersistentStore(at databaseURL: URL) throws {
+        let coordinator = NSPersistentStoreCoordinator(managedObjectModel: NSManagedObjectModel())
+        
+        // Destroying may fail if the file is corrupt or unreadable. The files are deleted below either way.
+        try? coordinator.destroyPersistentStore(at: databaseURL, ofType: NSSQLiteStoreType, options: nil)
+        try FileManager.default.deleteStoreFiles(atPath: databaseURL.path)
     }
     
     // MARK: Temporary Context
