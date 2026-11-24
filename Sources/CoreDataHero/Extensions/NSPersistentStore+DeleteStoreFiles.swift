@@ -9,6 +9,15 @@ extension NSPersistentStore {
             return
         }
         
+        try FileManager.default.deleteStoreFiles(atPath: storeURLPath)
+    }
+}
+
+// MARK: - FileManager + Utilities
+
+extension FileManager {
+    /// Deletes the .sqlite, .sqlite-shm, and .sqlite-wal files for the store at the given path.
+    func deleteStoreFiles(atPath storeURLPath: String) throws {
         let filePaths = [
             storeURLPath, // The .sqlite file
             storeURLPath.appending("-shm"), // The shared memory (.sqlite-shm) file
@@ -16,15 +25,11 @@ extension NSPersistentStore {
         ]
         
         for filePath in filePaths {
-            try FileManager.default.deleteFileIfFileExists(atPath: filePath)
+            try deleteFileIfFileExists(atPath: filePath)
         }
     }
-}
-
-// MARK: - FileManager + Utilities
-
-private extension FileManager {
-    func deleteFileIfFileExists(atPath path: String) throws {
+    
+    private func deleteFileIfFileExists(atPath path: String) throws {
         if self.fileExists(atPath: path) {
             try self.removeItem(atPath: path)
         }
